@@ -16,5 +16,20 @@ const entries = [
 ]
 
 export function getEntries(req,res){
-    res.status(200).json(entries);
+    return res.status(200).json(entries);
+}
+
+export function createEntries(req,res){
+    const { id, title, content, mood, tags} = req.body;
+
+    const newEntry = [
+        id,
+        title,
+        content,
+        mood,
+        tags
+    ]
+
+    entries.push(newEntry);
+    return res.status(200).json(newEntry);
 }
