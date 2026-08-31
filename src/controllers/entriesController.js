@@ -1,4 +1,4 @@
-const entries = [
+let entries = [
     {
         id: 1,
         title: "A quiet evening",
@@ -20,18 +20,18 @@ export function getEntries(req,res){
 }
 
 export function createEntries(req,res){
-    const { id, title, content, mood, tags} = req.body;
+    const contents = req.body;
 
-    const newEntry = [
+    const id = entries.length + 1;
+
+    const newEntry = {
         id,
-        title,
-        content,
-        mood,
-        tags
-    ]
-
+        ...contents
+    }
     entries.push(newEntry);
-    return res.status(200).json(newEntry);
+    return res.status(200).json({
+        message : "entry successfully created"
+    });
 }
 
 export function getEntryById(req,res){
@@ -92,4 +92,26 @@ export function updateEntry(req,res){
 
     return res.status(200).json(entry);
     
+}
+
+export function deleteEntry(req,res){
+    const id = req.params.id;
+
+    const entry = entries.find((entry)=>{
+        return entry.id === Number(id);
+    })
+
+    if(!entry){
+        return res.status(400).json({
+            message : "Entry not found"
+        });
+    }
+
+    entries = entries.filter((entry)=>{
+       return entry.id !== Number(id);
+    })
+
+    return res.status(200).json({
+        message : "Entry deleted sucessfully"
+    })
 }
