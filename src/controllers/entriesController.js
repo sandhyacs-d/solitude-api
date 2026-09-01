@@ -1,56 +1,41 @@
-let entries = [
-    {
-        id: 1,
-        title: "A quiet evening",
-        content: "Today was peaceful.",
-        mood: "calm",
-        tags: ["evening", "peace"]
-    },
-    {
-        id: 2,
-        title: "Bad day",
-        content: "Everything felt overwhelming.",
-        mood: "sad",
-        tags: ["rough-day"]
-    }
-]
+import Entry from "../models/entry.js";
 
-export function getEntries(req,res){
+export async function getEntries(req,res){
+    const entries = await Entry.find();
+
     return res.status(200).json(entries);
 }
 
-export function createEntries(req,res){
-    const contents = req.body;
+export async function createEntries(req,res){
+    const {title, content, mood, tags} = req.body;
 
-    const id = entries.length + 1;
-
-    const newEntry = {
-        id,
-        ...contents
-    }
-    entries.push(newEntry);
-    return res.status(200).json({
-        message : "entry successfully created"
+    const entry = await Entry.create({
+        title,
+        content,
+        mood,
+        tags
     });
+
+    return res.status(201).json(entry);
+
 }
 
-export function getEntryById(req,res){
+export async function getEntryById(req,res){
     const id = req.params.id;
 
-    const entry = entries.find((entry)=>{
-        return entry.id === Number(id);
-    });
+    const entry = await Entry.findById(id);
+
 
     if(!entry){
         return res.status(404).json({
-            message : "entry not found"
+            message : "Entry doesnot exist"
         })
     }
 
     return res.status(200).json(entry);
 }
 
-export function updateEntry(req,res){
+export async function updateEntry(req,res){
     const { title, content, mood, tags } = req.body;
     const id = req.params.id;
 
@@ -77,10 +62,8 @@ export function updateEntry(req,res){
             message : "No field to updated"
         })
     }
-
-    const entry = entries.find((entry)=>{
-        return entry.id === Number(id);
-    });
+    
+    const entry = await Entry.findByIdAndUpdate(id, updateData, {returnDocument : "after"})
 
     if(!entry){
         return res.status(404).json({
@@ -88,30 +71,23 @@ export function updateEntry(req,res){
         });
     }
 
-    Object.assign(entry, updateData);
 
     return res.status(200).json(entry);
     
 }
 
-export function deleteEntry(req,res){
-    const id = req.params.id;
+export async function deleteEntry(req,res){
+   const id = req.params.id;
 
-    const entry = entries.find((entry)=>{
-        return entry.id === Number(id);
-    })
+   const entry = await Entry.findByIdAndDelete(id);
 
-    if(!entry){
-        return res.status(400).json({
-            message : "Entry not found"
-        });
-    }
+   if(!entry){
+    return res.status(400).json({
+        message : "Entry not found"
+    });
+   }
 
-    entries = entries.filter((entry)=>{
-       return entry.id !== Number(id);
-    })
-
-    return res.status(200).json({
-        message : "Entry deleted sucessfully"
-    })
+   return res.status(200).json({
+    message : "Entry successfully deleted"
+   })
 }
