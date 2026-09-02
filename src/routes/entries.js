@@ -5,13 +5,14 @@ import { getEntries,
     updateEntry,
     deleteEntry
  } from "../controllers/entriesController.js";
+import { asyncHandler } from "../middleware/asyncHandler.js";
 
 const router = express.Router();
 
-router.get("/",getEntries);
-router.post("/",createEntries);
-router.get("/:id", getEntryById);
-router.patch("/:id",updateEntry);
-router.delete("/:id",deleteEntry);
+router.get("/",asyncHandler(getEntries));
+router.post("/",asyncHandler(createEntries));
+router.get("/:id", asyncHandler(getEntryById));
+router.patch("/:id",asyncHandler(updateEntry));
+router.delete("/:id",asyncHandler(deleteEntry));
 
 export default router;
