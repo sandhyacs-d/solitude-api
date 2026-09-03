@@ -1,4 +1,5 @@
 import Entry from "../models/entry.js";
+import { AppError } from "../middleware/appError.js";
 
 export async function getEntries(req,res){
     const entries = await Entry.find();
@@ -27,9 +28,7 @@ export async function getEntryById(req,res){
 
 
     if(!entry){
-        return res.status(404).json({
-            message : "Entry doesnot exist"
-        })
+        throw new AppError("User not found",404);
     }
 
     return res.status(200).json(entry);
@@ -58,18 +57,14 @@ export async function updateEntry(req,res){
     }
     
     if(Object.keys(updateData).length === 0){
-        return res.status(400).json({
-            message : "No field to updated"
-        })
+       throw new AppError("no field to update",400);
     }
     
     const entry = await Entry.findByIdAndUpdate(id, updateData, {returnDocument : "after"})
 
     if(!entry){
-        return res.status(404).json({
-            message : "Entry doesnot exist"
-        });
-    }
+         throw new AppError("Entry not found",404)
+        };
 
 
     return res.status(200).json(entry);
@@ -82,9 +77,7 @@ export async function deleteEntry(req,res){
    const entry = await Entry.findByIdAndDelete(id);
 
    if(!entry){
-    return res.status(400).json({
-        message : "Entry not found"
-    });
+    throw new AppError("Entry not found",404);
    }
 
    return res.status(200).json({
