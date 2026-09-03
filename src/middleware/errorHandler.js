@@ -1,4 +1,4 @@
-import { AppError } from "./appError"
+import { AppError } from "./appError.js"
 
 export function errorHandler(err,req,res,next){
     if(err.name === "CastError"){
