@@ -2,6 +2,7 @@ import {AppError} from "../middleware/appError.js";
 import User from "../models/users.js";
 import { hashPassword } from "../utils/password.js";
 
+
 export async function registerUser(req,res){
     const {name, email, password} = req.body;
 
