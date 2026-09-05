@@ -1,4 +1,4 @@
-import { AppError } from "./middleware/appError.js";
+import  { AppError } from "../middleware/appError.js";
 
 export function validateUser(req,res,next){
     const {name, email, password} = req.body;
@@ -26,7 +26,7 @@ export function validateUser(req,res,next){
         throw new AppError("invalid email format",400);
     }
 
-    const passworPattern = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
     if(password === undefined || password === ""){
         throw new AppError("password is required",400);
@@ -36,10 +36,44 @@ export function validateUser(req,res,next){
         throw new AppError("password must be a string",400);
     }
     
-    if(!passworPattern.test(password)){
+    if(!passwordPattern.test(password)){
         throw new AppError("invalid password format",400);
     }
     
+
+    next();
+}
+
+export function validateLogin(req,res,next){
+    const {email, password} = req.body;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if(email === undefined ||email === ""){
+        throw new AppError("email is required",400);
+    }
+
+    if(typeof email !== "string"){
+        throw new AppError("email must be a string",400);
+    }
+
+    if(!emailRegex.test(email)){
+        throw new AppError("invalid email format",400);
+    }
+
+    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
+    if(password === undefined || password === ""){
+        throw new AppError("password is required",400);
+    }
+
+    if(typeof password !== "string"){
+        throw new AppError("password must be a string",400);
+    }
+    
+    if(!passwordPattern.test(password)){
+        throw new AppError("invalid password format",400);
+    }
 
     next();
 }
