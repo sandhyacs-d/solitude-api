@@ -1,7 +1,8 @@
 import {AppError} from "../middleware/appError.js";
 import User from "../models/users.js";
-import { hashPassword } from "../utils/password.js";
-import bcrypt from "bcrypt";
+import { hashPassword,
+    verifyPassword
+ } from "../utils/password.js";
 
 
 export async function registerUser(req,res){
@@ -31,22 +32,20 @@ export async function registerUser(req,res){
 export async function loginUser(req,res){
     const {email, password} = req.body;
 
-    const existingUser = await User.findOne({email})
-    
-    if(!existingUser){
+    const user = await User.findOne({email});
+
+    if(!user){
         throw new AppError("Invalid email or password",401);
     }
 
+    const isPasswordValid = await verifyPassword(password,user.password);
 
-    const isMatch = await bcrypt.compare(password, existingUser.password);
-
-    if(!isMatch){
+    if(!isPasswordValid){
         throw new AppError("Invalid email or password",401);
     }
-    
+
     return res.status(200).json({
-        message :"Login successful",
-        user : existingUser.name
+        message : "login successfull",
+        user : user.name
     })
-
 }
