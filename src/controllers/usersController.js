@@ -3,6 +3,7 @@ import User from "../models/users.js";
 import { hashPassword,
     verifyPassword
  } from "../utils/password.js";
+ import { createToken } from "../utils/jwt.js";
 
 
 export async function registerUser(req,res){
@@ -44,8 +45,11 @@ export async function loginUser(req,res){
         throw new AppError("Invalid email or password",401);
     }
 
+    const token = createToken(user._id);
+
     return res.status(200).json({
-        message : "login successfull",
-        user : user.name
+        message : "login successful",
+        user : user.name,
+        token
     })
 }

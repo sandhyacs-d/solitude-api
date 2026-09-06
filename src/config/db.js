@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
 
 export async function connectdb(){
-    await mongoose.connect("mongodb://localhost:27017/solitude");
+    await mongoose.connect(process.env.MONGO_URI);
 }
