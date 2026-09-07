@@ -9,9 +9,12 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { validatePost,
     validatePatch
  } from "../middleware/validateEntry.js";
+ import { authMiddleware } from "../middleware/authMiddleware.js";
 
 
 const router = express.Router();
+
+router.use(authMiddleware);
 
 router.get("/",asyncHandler(getEntries));
 router.post("/",validatePost,asyncHandler(createEntries));
