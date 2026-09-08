@@ -2,7 +2,7 @@ import Entry from "../models/entry.js";
 import { AppError } from "../middleware/appError.js";
 
 export async function getEntries(req,res){
-    const entries = await Entry.find();
+    const entries = await Entry.find({user : req.user});
 
     return res.status(200).json(entries);
 }
@@ -14,7 +14,8 @@ export async function createEntries(req,res){
         title,
         content,
         mood,
-        tags
+        tags,
+        user : req.user
     });
 
     return res.status(201).json(entry);
