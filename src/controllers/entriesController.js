@@ -25,11 +25,14 @@ export async function createEntries(req,res){
 export async function getEntryById(req,res){
     const id = req.params.id;
 
-    const entry = await Entry.findById(id);
+    const entry = await Entry.findOne({
+        _id : id,
+        user : req.user
+});
 
 
     if(!entry){
-        throw new AppError("User not found",404);
+        throw new AppError("Entry not found",404);
     }
 
     return res.status(200).json(entry);
@@ -61,7 +64,10 @@ export async function updateEntry(req,res){
        throw new AppError("no field to update",400);
     }
     
-    const entry = await Entry.findByIdAndUpdate(id, updateData, {returnDocument : "after"})
+    const entry = await Entry.findOneAndUpdate(
+        {_id : id,
+        user : req.user},
+         updateData, {returnDocument : "after"})
 
     if(!entry){
          throw new AppError("Entry not found",404)
@@ -75,7 +81,10 @@ export async function updateEntry(req,res){
 export async function deleteEntry(req,res){
    const id = req.params.id;
 
-   const entry = await Entry.findByIdAndDelete(id);
+   const entry = await Entry.findOneAndDelete({
+    _id : id,
+    user : req.user
+   });
 
    if(!entry){
     throw new AppError("Entry not found",404);
