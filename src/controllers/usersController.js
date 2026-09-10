@@ -53,3 +53,11 @@ export async function loginUser(req,res){
         token
     })
 }
+
+export async function getCurrentUser(req,res){
+
+    const user = await User.findById(req.user).select("-password");
+
+    return res.status(200).json(user);
+
+}

@@ -2,7 +2,53 @@ import Entry from "../models/entry.js";
 import { AppError } from "../middleware/appError.js";
 
 export async function getEntries(req,res){
-    const entries = await Entry.find({user : req.user});
+    const {page = 1, limit = 10, fields, search} = req.query;
+
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const filter ={
+        user : req.user
+    };
+
+    if(req.query.mood){
+        filter.mood = req.query.mood;
+    }
+
+    if(req.query.tag){
+        filter.tags = req.query.tag;
+    }
+
+    if(search){
+       filter.$or =[
+        { title : {$regex : search , $options :"i"}},
+        { content : {$regex : search , $options :"i"}}
+       ];
+    };
+
+    let sortOption = {};
+
+    if(req.query.sort === "newest"){
+        sortOption = { createdAt : -1};
+    }
+
+    if(req.query.sort === "oldest"){
+        sortOption = { createdAt : 1};
+    }
+
+    let query = Entry.find(filter);
+
+    if(fields){
+        const selectedFields = fields.split(",").join(" ");
+        query = query.select(selectedFields);
+    }
+
+    const entries = await query
+    .sort(sortOption)
+    .skip(skip)
+    .limit(limitNumber);
 
     return res.status(200).json(entries);
 }

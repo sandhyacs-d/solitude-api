@@ -3,6 +3,10 @@ import { AppError } from "./appError.js";
 
 export function authMiddleware(req,res,next){
     const authHeader = req.headers.authorization;
+    
+     if (!authHeader) {
+        throw new AppError("authHeader not available", 401);
+    }
 
     const [scheme, token] = authHeader.split(" ");
 
