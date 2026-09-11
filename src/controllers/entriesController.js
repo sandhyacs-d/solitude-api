@@ -2,12 +2,10 @@ import Entry from "../models/entry.js";
 import { AppError } from "../middleware/appError.js";
 
 export async function getEntries(req,res){
-    const {page = 1, limit = 10, fields, search} = req.query;
+    const {page, limit } = req.pagination;
+    const {fields, search} = req.query;
 
-    const pageNumber = Number(page);
-    const limitNumber = Number(limit);
-
-    const skip = (pageNumber - 1) * limitNumber;
+    const skip = (page - 1) * limit;
 
     const filter ={
         user : req.user
@@ -48,7 +46,7 @@ export async function getEntries(req,res){
     const entries = await query
     .sort(sortOption)
     .skip(skip)
-    .limit(limitNumber);
+    .limit(limit);
 
     return res.status(200).json(entries);
 }
