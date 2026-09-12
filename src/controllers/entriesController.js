@@ -43,12 +43,31 @@ export async function getEntries(req,res){
         query = query.select(selectedFields);
     }
 
+    const total = await Entry.countDocuments(filter);
+
+    const totalPages = Math.ceil(total / limit);
+
+    const hasNextPage = page < totalPages;
+
+    const hasPreviousPage = page > 1;
+
     const entries = await query
     .sort(sortOption)
     .skip(skip)
     .limit(limit);
 
-    return res.status(200).json(entries);
+    return res.status(200).json({entries,
+        pagination : {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNextPage,
+            hasPreviousPage
+        }
+    }
+    );
+
 }
 
 export async function createEntries(req,res){

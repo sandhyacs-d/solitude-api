@@ -61,3 +61,39 @@ export async function getCurrentUser(req,res){
     return res.status(200).json(user);
 
 }
+
+export async function updateCurrentUser(req,res){
+    const {name, email} = req.body;
+    
+    const updateCurrentData = {};
+
+    if(name !== undefined){
+        updateCurrentData.name = name;
+    }
+
+    if(email !== undefined){
+        updateCurrentData.email = email;
+        
+        const existingUser = await User.findOne({email,
+            _id : { $ne : req.user} });
+
+        if(existingUser){
+            throw new AppError("email already exists",400);
+        }
+    }
+
+    if(Object.keys(updateCurrentData).length === 0){
+        throw new AppError("No field to update",400);
+    }
+
+    const user = await User.findOneAndUpdate({ _id : req.user}, updateCurrentData, {returnDocument :"after"}).select("-password");
+
+    if(!user){
+        throw new AppError("no user available",404);
+    }
+
+    return res.status(200).json(user);
+
+
+
+}
