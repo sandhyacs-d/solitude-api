@@ -79,3 +79,22 @@ export function validateLogin(req,res,next){
 }
 
 
+export function validateNewPassword(req,res,next){
+    const {newPassword} = req.body;
+
+    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
+    if(newPassword === undefined || newPassword  === ""){
+        throw new AppError("password is required",400);
+    }
+
+    if(typeof newPassword  !== "string"){
+        throw new AppError("password must be a string",400);
+    }
+    
+    if(!passwordPattern.test(newPassword )){
+        throw new AppError("invalid password format",400);
+    }
+
+    next();
+}

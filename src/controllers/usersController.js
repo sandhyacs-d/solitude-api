@@ -97,3 +97,29 @@ export async function updateCurrentUser(req,res){
 
 
 }
+
+export async function changePassword(req,res){
+    const {currentPassword, newPassword} = req.body;
+
+    const user = await User.findById(req.user);
+
+    if (!user) {
+    throw new AppError("User not found", 404);
+    }
+
+    const isPasswordValid = await verifyPassword(currentPassword,user.password);
+
+    if(!isPasswordValid){
+        throw new AppError("Invalid password",401);
+    }
+
+    const hashedNewPassword = await hashPassword(newPassword);
+
+    await User.findOneAndUpdate({
+        _id : req.user },
+        {password : hashedNewPassword});
+
+    return res.status(200).json({
+    message: "Password successfully changed"
+});
+}
