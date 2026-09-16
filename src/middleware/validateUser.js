@@ -98,3 +98,35 @@ export function validateNewPassword(req,res,next){
 
     next();
 }
+
+export function validateProfileUpdate(req,res,next){
+    const {name, email} = req.body;
+    
+    if(name !== undefined){
+        if(typeof name !== "string"){
+            throw  new AppError("Name must be a string",400);
+        }
+    }
+
+    if(email !== undefined){
+         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+         if(typeof email !== "string"){
+        throw new AppError("email must be a string",400);
+    }
+
+    if(!emailRegex.test(email)){
+        throw new AppError("invalid email format",400);
+    }
+    }
+
+    const allowedFields = ["name","email"];
+
+    const isOnlyAllowedField = Object.keys(req.body).every(field => allowedFields.includes(field));
+
+    if(!isOnlyAllowedField){
+        throw new AppError("Invalid field request",400);
+    }
+
+    next();
+}
