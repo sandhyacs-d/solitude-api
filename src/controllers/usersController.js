@@ -9,8 +9,9 @@ import { hashPassword,
 export async function registerUser(req,res){
     const {name, email, password} = req.body;
 
+    const normalizedEmail = email.toLowerCase();
     
-    const existingUser = await User.findOne({email});
+    const existingUser = await User.findOne({email : normalizedEmail});
     
     if(existingUser){
         throw new AppError("User already exists",409);
@@ -20,7 +21,7 @@ export async function registerUser(req,res){
     
     await User.create({
         name,
-        email,
+        email : normalizedEmail,
         password : hashedPassword
     })
 
@@ -32,8 +33,11 @@ export async function registerUser(req,res){
 
 export async function loginUser(req,res){
     const {email, password} = req.body;
+ 
+    const normalizedEmail = email.toLowerCase();
 
-    const user = await User.findOne({email});
+
+    const user = await User.findOne({email : normalizedEmail});
 
     if(!user){
         throw new AppError("Invalid email or password",401);
@@ -72,14 +76,17 @@ export async function updateCurrentUser(req,res){
     }
 
     if(email !== undefined){
-        updateCurrentData.email = email;
+
+        const normalizedEmail = email.toLowerCase();
         
-        const existingUser = await User.findOne({email,
+        const existingUser = await User.findOne({email : normalizedEmail,
             _id : { $ne : req.user} });
 
         if(existingUser){
             throw new AppError("email already exists",400);
         }
+
+        updateCurrentData.email = normalizedEmail;
     }
 
     if(Object.keys(updateCurrentData).length === 0){
@@ -117,7 +124,8 @@ export async function changePassword(req,res){
 
     await User.findOneAndUpdate({
         _id : req.user },
-        {password : hashedNewPassword});
+        {password : hashedNewPassword,
+        changePasswordAt : new Date()});
 
     return res.status(200).json({
     message: "Password successfully changed"
