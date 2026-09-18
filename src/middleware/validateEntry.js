@@ -1,58 +1,98 @@
 import { AppError } from "./appError.js";
 
 export function validatePost(req,res,next){
-    const {title,content} = req.body;
-    
-    if(!title){
-        return res.status(400).json({
-            success : false,
-            message : "title is missing"
-        })
+    const {title,content,tags} = req.body;
+
+
+    if(title === undefined){
+        throw new AppError("Title is required",400);
     }
 
     if(typeof(title) !== "string"){
-        return res.status(400).json({
-            success : false,
-            message : "title must be a string"
-        })
+         throw new AppError("Title must be a string",400);
     }
 
-    if(!content){
-         return res.status(400).json({
-            success : false,
-            message : "content is missing"
-        })
+    if(title.trim()===""){
+         throw new AppError("Title cannot be empty",400);
+    }
+
+
+    if(content === undefined ){
+        throw new AppError("content is required",400);
     }
 
     if(typeof(content) !== "string"){
-        return res.status(400).json({
-            success : false,
-            message : "content must be a string"
-        })
+        throw new AppError("content must be a string",400);
+    }
+
+    if(content.trim()===""){
+         throw new AppError("content cannot be empty",400);
+    }
+
+    if(tags !== undefined){
+    if(!Array.isArray(tags)){
+         throw new AppError("tags must be an array",400);
+    }
+
+    if(tags.some(tag => typeof tag !== "string")){
+        throw new AppError("tags must be a string",400);
+    }
+
+    }
+
+    const allowedFields = ["title","content","mood","tags"];
+
+    const isOnlyAllowedField = Object.keys(req.body).every(field => allowedFields.includes(field));
+
+    if(!isOnlyAllowedField){
+        throw new AppError("Invalid field request",400);
     }
 
     next();
 }
 
 export function validatePatch(req,res,next){
-    const {title, content} = req.body;
+    const {title, content,tags} = req.body;
 
     if(title !== undefined){
+
         if(typeof(title) !== "string"){
-            return res.status(400).json({
-                success : false,
-                message : "title must be a string"
-            })
+         throw new AppError("Title must be a string",400);
         }
+
+         if(title.trim()===""){
+         throw new AppError("Title cannot be empty",400);
+         }
     }
 
     if(content !== undefined){
         if(typeof(content) !== "string"){
-             return res.status(400).json({
-                success : false,
-                message : "content must be a string"
-        })
-        }
+            throw new AppError("content must be a string",400);
+         }
+
+    if(content.trim()===""){
+         throw new AppError("content cannot be empty",400);
+    }
+    }
+
+    if(tags !== undefined){
+    if(!Array.isArray(tags)){
+         throw new AppError("tags must be an array",400);
+    }
+
+    if(tags.some(tag => typeof tag !== "string")){
+        throw new AppError("Each tag must be a string",400);
+    }
+
+    }
+
+
+    const allowedFields = ["title","content","mood","tags"];
+
+    const isOnlyAllowedField = Object.keys(req.body).every(field => allowedFields.includes(field));
+
+    if(!isOnlyAllowedField){
+        throw new AppError("Invalid field request",400);
     }
 
     next();
