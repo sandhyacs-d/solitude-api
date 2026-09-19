@@ -1,6 +1,14 @@
 import { AppError } from "./appError.js";
 
 export function validatePost(req,res,next){
+
+    if (
+    typeof req.body !== "object" ||
+    req.body === null ||
+    Array.isArray(req.body)
+) {
+    throw new AppError("Request body must be an object", 400);
+}
     const {title,content,tags} = req.body;
 
 
@@ -52,6 +60,14 @@ export function validatePost(req,res,next){
 }
 
 export function validatePatch(req,res,next){
+
+    if (
+    typeof req.body !== "object" ||
+    req.body === null ||
+    Array.isArray(req.body)
+) {
+    throw new AppError("Request body must be an object", 400);
+}
     const {title, content,tags} = req.body;
 
     if(title !== undefined){

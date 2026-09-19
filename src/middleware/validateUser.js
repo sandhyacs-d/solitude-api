@@ -1,6 +1,16 @@
 import  { AppError } from "../middleware/appError.js";
 
 export function validateUser(req,res,next){
+
+    if (
+        typeof req.body !== "object" ||
+        req.body === null ||
+        Array.isArray(req.body)
+    ) {
+        throw new AppError("Request body must be an object", 400);
+    }
+
+
     const {name, email, password} = req.body;
 
      if(name === undefined ){
@@ -56,6 +66,15 @@ export function validateUser(req,res,next){
 }
 
 export function validateLogin(req,res,next){
+
+    if (
+    typeof req.body !== "object" ||
+    req.body === null ||
+    Array.isArray(req.body)
+) {
+    throw new AppError("Request body must be an object", 400);
+}
+
     const {email, password} = req.body;
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -99,6 +118,14 @@ export function validateLogin(req,res,next){
 
 
 export function validatePasswordChange(req,res,next){
+    if (
+    typeof req.body !== "object" ||
+    req.body === null ||
+    Array.isArray(req.body)
+) {
+    throw new AppError("Request body must be an object", 400);
+}
+
     const {currentPassword ,newPassword} = req.body;
 
 
@@ -146,6 +173,14 @@ export function validatePasswordChange(req,res,next){
 }
 
 export function validateProfileUpdate(req,res,next){
+    if (
+    typeof req.body !== "object" ||
+    req.body === null ||
+    Array.isArray(req.body)
+) {
+    throw new AppError("Request body must be an object", 400);
+}
+
     const {name, email} = req.body;
     
     if(name !== undefined){
