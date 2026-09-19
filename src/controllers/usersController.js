@@ -9,7 +9,7 @@ import { hashPassword,
 export async function registerUser(req,res){
     const {name, email, password} = req.body;
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
     
     const existingUser = await User.findOne({email : normalizedEmail});
     
@@ -34,7 +34,7 @@ export async function registerUser(req,res){
 export async function loginUser(req,res){
     const {email, password} = req.body;
  
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
 
     const user = await User.findOne({email : normalizedEmail});
@@ -77,7 +77,7 @@ export async function updateCurrentUser(req,res){
 
     if(email !== undefined){
 
-        const normalizedEmail = email.toLowerCase();
+        const normalizedEmail = email.trim().toLowerCase();
         
         const existingUser = await User.findOne({email : normalizedEmail,
             _id : { $ne : req.user} });
