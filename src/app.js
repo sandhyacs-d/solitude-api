@@ -1,4 +1,5 @@
 import express from "express";
+
 import entryRouter from "./routes/entries.js";
 import userRouter from "./routes/user.js";
 import { errorHandler } from "./middleware/errorHandler.js";
