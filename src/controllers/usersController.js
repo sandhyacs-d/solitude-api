@@ -83,7 +83,7 @@ export async function updateCurrentUser(req,res){
             _id : { $ne : req.user} });
 
         if(existingUser){
-            throw new AppError("email already exists",400);
+            throw new AppError("email already exists",409);
         }
 
         updateCurrentData.email = normalizedEmail;
