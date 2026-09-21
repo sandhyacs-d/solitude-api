@@ -5,6 +5,8 @@ test("GET /entries requires authentication",async()=>{
     const response = await request(app).get("/entries");
 
     expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("authHeader not available");
 });
 
 test("GET /entries rejects malformed authorization header",async()=>{
@@ -18,3 +20,4 @@ test("GET /entries reject invalid token",async()=>{
 
     expect(response.status).toBe(401);
 })
+
