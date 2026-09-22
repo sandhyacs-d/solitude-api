@@ -1,6 +1,18 @@
 import app from "../src/app.js";
 import request from "supertest";
 import jwt from "jsonwebtoken";
+import { connectTestDb , disconnectTestDB} from "./setup.js";
+
+beforeAll(async()=>{
+    await connectTestDb();
+
+    await User.create({
+        name : "NoTest",
+        email :"NoTest1@gmail.com",
+        password : "NoTest123"
+
+    });
+})
 
 test("GET /entries requires authentication",async()=>{
     const response = await request(app).get("/entries");
@@ -39,3 +51,7 @@ test("GET /entries rejects expired token",async()=>{
     expect(response.status).toBe(401);
     expect(response.body.message).toBe("Invalid or expired token");
 });
+
+afterAll(async()=>{
+    await disconnectTestDB();
+})
