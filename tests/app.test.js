@@ -68,6 +68,59 @@ test("GET /entries accepts valid token",async()=>{
     expect(response.body.entries).toEqual(expect.any(Array));
 })
 
+test("old token is invalid after password change ",async()=>{
+    const oldToken = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn : "1h"}
+    );
+
+    await User.findByIdAndUpdate(
+        testUser._id,
+        { password : "newPassword123",
+        changePasswordAt : new Date(Date.now() +1000)
+        }
+    )
+
+    await new Promise(resolve => setTimeout(resolve, 1100));
+
+    const newToken = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn : "1h"}
+    );
+
+    const response = await request(app).get("/entries").set("Authorization",`Bearer ${oldToken}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe("Token invalid after password change");
+
+
+    const newResponse = await  request(app).get("/entries").set("Authorization",`Bearer ${newToken}`);
+
+    expect(newResponse.status).toBe(200);
+})
+
+//POST
+test("POST /entries creates an entry",async ()=>{
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn : "1h"}
+    )
+
+    const entryData = {
+    title: "My first test entry",
+    content: "Testing my journal API",
+    mood: "calm",
+    tags: ["testing", "journal"]
+    };
+
+    const response = await request(app).post("/entries").set("Authorization",`Bearer ${token}`).send(entryData);
+
+    expect(response.status).toBe(201);
+    expect(response.body.title).toBe(entryData.title);
+});
 
 afterAll(async()=>{
     await disconnectTestDB();
