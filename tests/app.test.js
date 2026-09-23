@@ -122,6 +122,20 @@ test("POST /entries creates an entry",async ()=>{
     expect(response.body.title).toBe(entryData.title);
 });
 
+test("GET /entries returns user's entries",async()=>{
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn : "1h"}
+    )
+
+    const response = await request(app).get("/entries").set("Authorization",`Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.entries).toEqual(expect.any(Array));
+    expect(response.body.pagination).toEqual(expect.any(Object));
+})
+
 afterAll(async()=>{
     await disconnectTestDB();
 })
