@@ -3,6 +3,7 @@ import request from "supertest";
 import jwt from "jsonwebtoken";
 import { connectTestDb , disconnectTestDB} from "./setup.js";
 import User from "../src/models/users.js";
+import Entry from "../src/models/entry.js";
 
 let testUser;
 
@@ -135,6 +136,78 @@ test("GET /entries returns user's entries",async()=>{
     expect(response.body.entries).toEqual(expect.any(Array));
     expect(response.body.pagination).toEqual(expect.any(Object));
 })
+
+test("GET /entries/:id returns a single entry",async()=>{
+    const token = jwt.sign(
+    {userId : testUser._id},
+    process.env.JWT_SECRET,
+    {expiresIn :"1h"}
+)
+
+  const entry = await Entry.create({
+    title: "Test single entry",
+    content: "Testing GET by ID",
+    mood: "calm",
+    tags: ["testing"],
+    user : testUser._id
+  })
+
+  const response = await request(app).get(`/entries/${entry._id}`).set("Authorization",`Bearer ${token}`);
+
+  expect(response.status).toBe(200);
+  expect(response.body._id).toBe(entry._id.toString());
+});
+
+test("PATCH /entries/:id updates a single entry",async()=>{
+    const token = jwt.sign(
+    {userId : testUser._id},
+    process.env.JWT_SECRET,
+    {expiresIn :"1h"}
+)
+
+  const entry = await Entry.create({
+    title: "Test single entry",
+    content: "Testing GET by ID",
+    mood: "calm",
+    tags: ["testing"],
+    user : testUser._id
+  })
+
+  const response = await request(app).patch(`/entries/${entry._id}`).set("Authorization",`Bearer ${token}`).send({mood : "happy"});
+
+  expect(response.status).toBe(200);
+  expect(response.body.mood).toBe("happy");
+})
+
+test("DELETE /entries/:id deletes a single entry",async()=>{
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn :"1h"}
+    )
+
+    const entry = await Entry.create({
+        title: "Test single entry",
+        content: "Testing GET by ID",
+        mood: "calm",
+        tags: ["testing"],
+        user : testUser._id
+    })
+
+    const response = await request(app).delete(`/entries/${entry._id}`).set("Authorization",`Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("Entry successfully deleted");
+
+    const deletedEntry = await Entry.findById(entry._id);
+
+    expect(deletedEntry).toBeNull();
+   
+})
+
+
+
+
 
 afterAll(async()=>{
     await disconnectTestDB();
