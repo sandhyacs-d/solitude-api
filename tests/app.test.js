@@ -16,6 +16,12 @@ beforeAll(async()=>{
         password : "NoTest123"
 
     });
+
+    secondTestUser = await User.create({
+        name : "YesTest",
+        email : "Test12@gmail.com",
+        password : "Testand123"
+    })
 })
 
 test("GET /entries requires authentication",async()=>{
@@ -205,8 +211,80 @@ test("DELETE /entries/:id deletes a single entry",async()=>{
    
 })
 
+test("GET /entries/:id prevents access to another user's entry",async()=>{
+    const token1 = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn :"1h"}
+    )
+
+    const entry = await Entry.create({
+        title: "Other user's entry",
+        content: "This belongs to another user",
+        mood: "calm",
+        tags: ["private"],
+        user : secondTestUser._id
+    })
+
+    const response = await request(app).get(`/entries/${entry._id}`).set("Authorization",`Bearer ${token1}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("Entry not found");
+})
+
+test("PATCH /entries/:id prevents updating another user's entry", async () => { 
+    const token1 = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn :"1h"}
+    );
+
+    const entry = await Entry.create({
+        title: "Other user's entry",
+        content: "This belongs to another user",
+        mood: "calm",
+        tags: ["private"],
+        user : secondTestUser._id
+    })
+
+    const response = await request(app).patch(`/entries/${entry._id}`).set("Authorization",`Bearer ${token1}`).send({
+        mood : "sad"
+    });
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("Entry not found");
+});
+
+test("DELETE /entries/:id prevents deleting another user's entry", async () => {
+     const token1 = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn :"1h"}
+    );
+
+    const entry = await Entry.create({
+        title: "Other user's entry",
+        content: "This belongs to another user",
+        mood: "calm",
+        tags: ["private"],
+        user : secondTestUser._id
+    });
+
+    const response = await request(app).delete(`/entries/${entry._id}`).set("Authorization",`Bearer ${token1}`);
+     
+     expect(response.status).toBe(404);
+     expect(response.body.success).toBe(false);
+     expect(response.body.message).toBe("Entry not found");
+
+     const deletedEntry = await Entry.findById(entry._id);
+
+    expect(deletedEntry).not.toBeNull();
 
 
+
+});
 
 
 afterAll(async()=>{
