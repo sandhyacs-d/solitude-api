@@ -286,6 +286,125 @@ test("DELETE /entries/:id prevents deleting another user's entry", async () => {
 
 });
 
+test("POST /entries rejects missing title", async () => {
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn :"1h"}
+    );
+
+    const entryData = {
+        content: "This belongs to another user",
+        mood: "calm",
+        tags: ["private"],
+    }
+ 
+    
+    const response = await request(app).post("/entries").set("Authorization",`Bearer ${token}`).send(entryData);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+
+
+
+});
+
+test("POST /entries rejects missing content", async () => {
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn :"1h"}
+    );
+
+    const entryData = {
+        title : "Good Morning",
+        mood: "calm",
+        tags: ["private"],
+    }
+ 
+    
+    const response = await request(app).post("/entries").set("Authorization",`Bearer ${token}`).send(entryData);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+
+});
+
+test("POST /entries rejects invalid mood", async () => {
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn :"1h"}
+    );
+
+    const entryData = {
+        title : "Good Morning",
+        content :"It was a good morning",
+        mood: "depressing",
+        tags: ["private"],
+    }
+
+    const response = await request(app).post("/entries").set("Authorization",`Bearer ${token}`).send(entryData);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+
+
+});
+
+
+test("PATCH /entries/:id rejects empty update", async () => {
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn :"1h"}
+    )
+
+    const entry = await Entry.create({
+        title: "Test single entry",
+        content: "Testing GET by ID",
+        mood: "calm",
+        tags: ["testing"],
+        user : testUser._id
+    })
+
+    const response = await request(app).patch(`/entries/${entry._id}`).set("Authorization",`Bearer ${token}`).send();
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("Request body must be an object");
+});
+
+
+test("GET /entries/:id rejects invalid entry ID", async () => {
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn : "1h"}
+    )
+
+    const response = await request(app).get("/entries/not-a-valid-id").set("Authorization",`Bearer ${token}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+});
+
+test("GET /entries/:id returns 404 when entry does not exist", async () => {
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn : "1h"}
+    )
+
+    const response = await request(app).get("/entries/507f1f77bcf86cd799439011").set("Authorization",`Bearer ${token}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("Entry not found");
+});
+
+
+
 
 afterAll(async()=>{
     await disconnectTestDB();
