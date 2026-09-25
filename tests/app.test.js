@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { connectTestDb , disconnectTestDB} from "./setup.js";
 import User from "../src/models/users.js";
 import Entry from "../src/models/entry.js";
+import { hashPassword } from "../src/utils/password.js";
 
 let testUser;
 
@@ -21,7 +22,9 @@ beforeAll(async()=>{
         name : "YesTest",
         email : "Test12@gmail.com",
         password : "Testand123"
-    })
+    });
+
+
 })
 
 test("GET /entries requires authentication",async()=>{
@@ -403,8 +406,75 @@ test("GET /entries/:id returns 404 when entry does not exist", async () => {
     expect(response.body.message).toBe("Entry not found");
 });
 
+test("GET /user/me returns the current user", async () => {
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn : "1h"}
+    )
+
+     const response = await request(app).get("/user/me").set("Authorization",`Bearer ${token}`);
+
+     expect(response.status).toBe(200);
+     expect(response.body._id).toBe(testUser._id.toString());
+     expect(response.body.password).toBeUndefined();
+});
+
+test("PATCH /user/me updates the current user's profile", async () => {
+    const token = jwt.sign(
+        {userId : testUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn : "1h"}
+    )
+
+    const response = await request(app).patch("/user/me").set("Authorization",`Bearer ${token}`).send({name : "updatedName"});
+
+    expect(response.status).toBe(200);
+    expect(response.body.name).toEqual("updatedName");
+
+    const updatedUser = await User.findById(testUser._id);
+
+    expect(updatedUser.name).toBe("updatedName");
+});
+
+test("PATCH /user/me/password changes the current user's password", async () => {
+     const hashedPassword = await hashPassword("NoTest123");
+
+    const passwordTestUser = await User.create({
+    name: "Password Test",
+    email: "passwordtest@gmail.com",
+    password: hashedPassword
+});
+
+    const token = jwt.sign(
+    { userId: passwordTestUser._id },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+    );
+
+    const response = await request(app).patch("/user/me/password").set("Authorization",`Bearer ${token}`).send({
+        currentPassword : "NoTest123",
+        newPassword : "yesTest123"
+    });
+
+    console.log("PASSWORD RESPONSE:", response.status, response.body);
 
 
+    expect(response.status).toBe(200);
+
+    expect(response.body.message).toBe("Password successfully changed");
+
+    const loginResponse = await request(app)
+    .post("/user/login")
+    .send({
+        email: "passwordtest@gmail.com",
+        password: "yesTest123"
+    });
+
+    expect(loginResponse.status).toBe(200);
+    expect(loginResponse.body.token).toBeDefined();
+
+});
 
 afterAll(async()=>{
     await disconnectTestDB();
