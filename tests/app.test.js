@@ -487,9 +487,6 @@ test("POST /user successfully registers a user",async()=>{
     expect(response.body.message).toBe("User successfully registered!");
 });
 
-afterAll(async()=>{
-    await disconnectTestDB();
-})
 
 test("POST /user rejecs existing email",async()=>{
     const existingData = await User.create({
@@ -550,4 +547,8 @@ test("POST /user/login rejects a wrong password",async()=>{
 
     expect(response.status).toBe(401);
     expect(response.body.message).toBe("Invalid email or password");
+})
+
+afterAll(async()=>{
+    await disconnectTestDB();
 })
