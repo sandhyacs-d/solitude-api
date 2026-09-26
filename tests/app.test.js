@@ -457,8 +457,6 @@ test("PATCH /user/me/password changes the current user's password", async () => 
         newPassword : "yesTest123"
     });
 
-    console.log("PASSWORD RESPONSE:", response.status, response.body);
-
 
     expect(response.status).toBe(200);
 
@@ -476,6 +474,80 @@ test("PATCH /user/me/password changes the current user's password", async () => 
 
 });
 
+test("POST /user successfully registers a user",async()=>{
+       const userData = {
+        name : "Sandhya",
+        email : "Sandhya123@gmail.com",
+        password : "tests123"
+       };
+
+    const response = await request(app).post("/user").send(userData);
+
+    expect(response.status).toBe(201);
+    expect(response.body.message).toBe("User successfully registered!");
+});
+
 afterAll(async()=>{
     await disconnectTestDB();
+})
+
+test("POST /user rejecs existing email",async()=>{
+    const existingData = await User.create({
+        name : "Sandhya",
+        email : "Sandhya123@gmail.com",
+        password : await hashPassword("tests123")
+    });
+
+    const response = await request(app).post("/user").send({
+        name : "SecondUser",
+        email : "Sandhya123@gmail.com",
+        password : "test0012"
+    });
+
+    expect(response.status).toBe(409);
+    expect(response.body.message).toBe("User already exists");
+});
+
+test("POST /user rejects a missing email",async()=>{
+    const userData = {
+        name : "Sandhya",
+        password : "tests123"
+    }
+
+    const response = await request(app).post("/user").send(userData);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+});
+
+test("POST /user/login successfully logs In the user",async()=>{
+    const user = await User.create({
+        name : "Sandhya",
+        email : "sanddz1@gmail.com",
+        password : await hashPassword("tests123")
+    })
+
+    const response = await request(app).post("/user/login").send({
+        email : "sanddz1@gmail.com",
+        password : "tests123"
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.token).toBeDefined();
+});
+
+test("POST /user/login rejects a wrong password",async()=>{
+    const user = await User.create({
+        name : "Sandhya",
+        email : "sandhu12@gmail.com",
+        password : await hashPassword("tests123")
+    })
+
+    const response = await request(app).post("/user/login").send({
+        email : "sandhu12@gmail.com",
+        password : "testwo123"
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe("Invalid email or password");
 })
