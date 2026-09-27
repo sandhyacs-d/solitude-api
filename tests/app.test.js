@@ -5,6 +5,7 @@ import { connectTestDb , disconnectTestDB} from "./setup.js";
 import User from "../src/models/users.js";
 import Entry from "../src/models/entry.js";
 import { hashPassword } from "../src/utils/password.js";
+import { response, text } from "express";
 
 let testUser;
 
@@ -517,6 +518,19 @@ test("POST /user rejects a missing email",async()=>{
     expect(response.body.success).toBe(false);
 });
 
+test("POST /user rejects a missing name",async()=>{
+    const userData = {
+        email : "elio123@gmail.com",
+        password : "elio12390"
+    }
+
+    const response = await request(app).post("/user").send(userData);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+
+});
+
 test("POST /user/login successfully logs In the user",async()=>{
     const user = await User.create({
         name : "Sandhya",
@@ -533,7 +547,7 @@ test("POST /user/login successfully logs In the user",async()=>{
     expect(response.body.token).toBeDefined();
 });
 
-test("POST /user/login rejects a wrong password",async()=>{
+test("POST /user/login rejects invalid password",async()=>{
     const user = await User.create({
         name : "Sandhya",
         email : "sandhu12@gmail.com",
@@ -547,6 +561,108 @@ test("POST /user/login rejects a wrong password",async()=>{
 
     expect(response.status).toBe(401);
     expect(response.body.message).toBe("Invalid email or password");
+})
+
+test("POST /user/login rejects log in with nonexistent email",async()=>{
+    const user = await User.create({
+        name : "John",
+        email : "John12@gmail.com",
+        password : await hashPassword("JohnTest123")
+    });
+
+    const response = await request(app).post("/user/login").send({
+        email : "john234@gmail.com",
+        password : "JohnisDon123"
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe("Invalid email or password");
+})
+
+test("PATCH /user/me rejects invalid email",async()=>{
+   const token = jwt.sign(
+    { userId: testUser._id },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+    );
+
+    const updateData = {
+        email : "not-a-valid-email"
+    }
+
+    const response = await request(app).patch("/user/me").set("Authorization",`Bearer ${token}`).send(updateData);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+});
+
+test("PATCH /user/me rejects duplicate email",async()=>{
+
+    const testSecond = await User.create({
+        name : "secondtest",
+        email : "notest123@gmail.com",
+        password : await hashPassword("Yotest123")
+    });
+
+    const token = jwt.sign(
+    { userId: testUser._id },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+    );
+
+    
+
+    const response = await request(app).patch("/user/me").set("Authorization",`Bearer ${token}`).send({
+        email : "notest123@gmail.com"
+    });
+
+    expect(response.status).toBe(409);
+    expect(response.body.message).toBe("email already exists");
+})
+
+test("PATCH /user/me/password rejects invalid current password",async()=>{
+    const user = await User.create({
+        name : "Oliver",
+        email : "Oliver123@gmail.com",
+        password : await hashPassword("Oliver123")
+    })
+
+const token = jwt.sign(
+    {userId : user._id},
+    process.env.JWT_SECRET,
+    {expiresIn : "1h"}
+);
+
+const response = await request(app).patch("/user/me/password").set("Authorization",`Bearer ${token}`).send({
+    currentPassword : "olive123",
+    newPassword : "olives34"
+});
+
+expect(response.status).toBe(401);
+expect(response.body.message).toBe("Invalid password");
+
+});
+
+test("PATCH /user/me/password rejects missing newPassword",async()=>{
+
+    const user = await User.create({
+        name : "Marzia",
+        email : "Marzia123@gmail.com",
+        password : await hashPassword("Marzia123")
+    })
+
+const token = jwt.sign(
+    {userId : user._id},
+    process.env.JWT_SECRET,
+    {expiresIn : "1h"}
+);
+
+const response = await request(app).patch("/user/me/password").set("Authorization",`Bearer ${token}`).send({
+    currentPassword : "Marzia123"
+});
+
+expect(response.status).toBe(400);
+expect(response.body.success).toBe(false);
 })
 
 afterAll(async()=>{
