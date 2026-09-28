@@ -665,6 +665,91 @@ expect(response.status).toBe(400);
 expect(response.body.success).toBe(false);
 })
 
+test("POST /user/login rejects excessive login attempts", async () => {
+    for (let i = 0; i < 10; i++) {
+    await request(app)
+        .post("/user/login")
+        .send({
+            email: "Marzia123@gmail.com",
+            password: "Marzia234"
+        });
+}
+
+    const response = await request(app)
+    .post("/user/login")
+    .send({
+        email: "Marzia123@gmail.com",
+        password: "Marzia234"
+    });
+
+expect(response.status).toBe(429);
+expect(response.body.success).toBe(false);
+
+});
+
+test("PATCH /user/me ignores protected fields", async () => {
+    const newUser = await User.create({
+        name : "newUser",
+        email :"newUser00@gmail.com",
+        password : await hashPassword("newUser123")
+    });
+
+    const token = jwt.sign(
+        {userId : newUser._id},
+        process.env.JWT_SECRET,
+        {expiresIn : "1h"}
+    );
+
+    const response = await request(app).patch("/user/me").set("Authorization",`Bearer ${token}`).send({
+        name: "Hacker",
+        changePasswordAt : "......"
+    });
+
+
+
+    const updatedUser = await User.findById(newUser._id);
+
+    expect(updatedUser.changePasswordAt).toBeUndefined();
+    expect(response.status).toBe(200);
+    expect(updatedUser.name).toBe("Hacker");
+
+
+
+});
+
+test("rejects oversized JSON request bodies", async () => {
+    const hugeContent = "a".repeat(101 * 1024);
+
+    const response = await request(app)
+        .post("/user")
+        .send({
+            name: "Large User",
+            email: "largeuser@gmail.com",
+            password: hugeContent
+        });
+
+    expect(response.status).toBe(413);
+});
+
+test("GET /entries rejects an oversized search query", async () => {
+    const token = jwt.sign(
+        { userId: testUser._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+    );
+
+    const response = await request(app)
+        .get("/entries")
+        .set("Authorization", `Bearer ${token}`)
+        .query({
+            search: "a".repeat(101)
+        });
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+});
+
+
 afterAll(async()=>{
     await disconnectTestDB();
 })

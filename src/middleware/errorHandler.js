@@ -15,6 +15,13 @@ export function errorHandler(err,req,res,next){
         })
     }
 
+    if(err.type === "entity.too.large"){
+        return res.status(413).json({
+            success : false,
+            message : err.message
+        })
+    }
+
     if(err instanceof AppError){
         return res.status(err.statusCode).json({
         success: false,
